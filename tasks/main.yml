@@ -158,6 +158,18 @@
   ansible.builtin.debug:
     var: result
 
+- name: Mkdir Directory [config_zsh, user_local]
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    group: root
+    owner: root
+  with_items:
+    - "{{ config_zsh }}"
+    - "{{ user_local }}"
+  register: result
+
 - name: Clone a Git repository with authentication
   ansible.builtin.git:
     repo: '{{ item.from }}'
@@ -170,11 +182,31 @@
     force: true
     update: true
   with_items:
+    - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/user_nvim.git', to: '~/.config/nvim/lua/user', version: 'main' }
     - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/kubya.git', to: '{{ local_ws }}/kubya', version: 'dev' }
     - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/kubya-playbooks.git', to: '{{ local_ws }}/playbooks', version: 'dev' }
     - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/jenkins-docker.git', to: '{{ local_ws }}/jenkins-docker', version: 'dev' }
   when: git_clone
-  tags: git_clone
+  tags:
+    - git_clone
+    - sync
+
+- name: Copy Zsh Config
+  ansible.builtin.copy:
+    dest: '{{ item.to }}'
+    src: '{{ item.from }}'
+    mode: '0600'
+  with_items:
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.zshrc', to: '~/' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.gitconfig', to: '~/' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/.zshenv', to: '{{ config_zsh }}' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/nix.zshrc', to: '{{ config_zsh }}' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/alias.sh', to: '{{ config_zsh }}' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/aws.sh', to: '{{ config_zsh }}' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/project.sh', to: '{{ config_zsh }}' }
+  tags:
+    - sync
+    - zsh
 
 - name: Check config.yml of the k9s
   ansible.builtin.stat:
