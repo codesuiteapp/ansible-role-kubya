@@ -1,0 +1,13 @@
+---
+user_home: "~"
+gitconf: "{{ user_home }}/.gitconfig"
+zshenv: "{{ user_home }}/.config/zsh/.zshenv"
+kubeconfig: "{{ user_home }}/.kube/config"
+sshconfig: "{{ user_home }}/.ssh/config"
+local_bin: "{{ user_home }}/.local/bin"
+local_ws: "{{ user_home }}/.local/workspace"
+
+use_kube: true
+
+git_clone: true
+dkr_pull: false

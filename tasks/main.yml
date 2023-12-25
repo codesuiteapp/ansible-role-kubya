@@ -1,0 +1,157 @@
+---
+- name: Make ~/.ssh Directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    group: root
+    owner: root
+  loop:
+    - "~/.ssh"
+  register: result
+
+- name: Touch config of the ssh
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: touch
+    mode: "{{ item.mode }}"
+  loop:
+    - path: "{{ sshconfig }}"
+      mode: '0600'
+  ignore_errors: true
+
+- name: Make ~/.ssh/id_rsa and ~/.ssh/id_rsa.pub
+  become: true
+  ansible.builtin.copy:
+    dest: "{{ item.dest }}"
+    mode: '0400'
+    content: |
+      {{ item.content }}
+  loop:
+    - dest: {{ ssh_key }}
+      content: {{ enc_id_rsa_key }}
+    - dest: {{ ssh_pub }}
+      content: {{ enc_id_rsa_pub }}
+  when: enc_id_rsa_key is not undefined and enc_id_rsa_pub is not undefined
+  register: result
+
+- name: Print variables
+  ansible.builtin.debug:
+    var: result
+
+- name: Make ~/.kube Directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    group: root
+    owner: root
+  loop:
+    - "~/.kube"
+  register: result
+  when: use_kube
+  tags: kube
+
+- name: Touch config of the kube
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: touch
+    mode: "{{ item.mode }}"
+  loop:
+    - path: "{{ kubeconfig }}"
+      mode: '0400'
+  ignore_errors: true
+  when: use_kube
+  tags: kube
+
+- name: Check {{ zshenv }}
+  ansible.builtin.stat:
+    path: "{{ zshenv }}"
+  register: exist_zshenv
+
+- name: Replace {{ zshenv }}
+  become: true
+  ansible.builtin.lineinfile:
+    path: "{{ zshenv }}"
+    regexp: '{{ item.from }}'
+    line: '{{ item.to }}'
+    state: present
+    backup: false
+  with_items:
+    - { from: 'export GHCR_USERNAME', to: 'export GHCR_USERNAME="{{ dkr_username }}"' }
+    - { from: '^(#.)?export CR_PAT', to: 'export CR_PAT="{{ dkr_passwd }}"' }
+    - { from: '^(#.)?export SSHPW', to: 'export SSHPW="{{ ansible_ssh_pass }}"' }
+    # - { from: 'export DKR_USERNAME', to: 'export DKR_USERNAME="{{ dkr_username }}"' }
+    # - { from: '^(#.)?export DKR_PASSWD', to: 'export DKR_PASSWD="{{ dkr_passwd }}"' }
+  when: exist_zshenv.stat.exists
+  register: result
+  ignore_errors: true
+  tags: zshenv
+
+- name: Print variables
+  ansible.builtin.debug:
+    var: result
+
+- name: Check .gitconfig
+  ansible.builtin.stat:
+    path: "~/.gitconfig"
+  register: res_gitconf
+  tags: zshenv
+
+- name: Replace {{ gitconf }}
+  ansible.builtin.lineinfile:
+    path: "{{ gitconf }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+    backup: false
+  with_items:
+    - { regexp: "name.=.", line: "    name = {{ git_user }}" }
+    - { regexp: "email.=.", line: "    email = {{ git_user_email }}" }
+  when: res_gitconf.stat.exists and git_user
+  register: result
+  tags: zshenv
+
+- name: Change permissions of files and directories
+  ansible.builtin.file:
+    path: "{{ local_ws }}"
+    mode: "0755"
+    recurse: true
+    state: directory
+
+- name: Find all .sh files in workspace directory
+  ansible.builtin.find:
+    paths: "{{ item }}"
+    patterns: "*.sh"
+    hidden: true
+    recurse: true
+    use_regex: false
+  loop:
+    - "{{ local_bin }}"
+    - "{{ local_ws }}"
+  register: sh_files
+
+- name: Change permissions of .sh files
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    mode: "u+x"
+  loop:
+    - "{{ sh_files.files }}"
+
+- name: Clone a Git repository with authentication
+  ansible.builtin.git:
+    repo: '{{ item.from }}'
+    dest: "{{ item.to }}"
+    clone: true
+    depth: 1
+    recursive: true
+    version: '{{ item.version }}'
+    accept_hostkey: true
+    force: true
+    update: true
+  with_items:
+    - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/kubya.git', to: '{{ local_ws }}/kubya', version: 'dev' }
+    - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/kubya-playbooks.git', to: '{{ local_ws }}/playbooks', version: 'dev' }
+    - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/jenkins-docker.git', to: '{{ local_ws }}/jenkins-docker', version: 'dev' }
+  when: git_clone
+  tags: git_clone
