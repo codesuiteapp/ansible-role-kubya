@@ -1,3 +1,4 @@
+# code: language=ansible
 ---
 - name: Make ~/.ssh Directory
   ansible.builtin.file:
@@ -28,10 +29,10 @@
     content: |
       {{ item.content }}
   loop:
-    - dest: {{ ssh_key }}
-      content: {{ enc_id_rsa_key }}
-    - dest: {{ ssh_pub }}
-      content: {{ enc_id_rsa_pub }}
+    - dest: "{{ ssh_key }}"
+      content: "{{ enc_id_rsa_key }}"
+    - dest: "{{ ssh_pub }}"
+      content: "{{ enc_id_rsa_pub }}"
   when: enc_id_rsa_key is not undefined and enc_id_rsa_pub is not undefined
   register: result
 
@@ -129,14 +130,14 @@
   loop:
     - "{{ local_bin }}"
     - "{{ local_ws }}"
-  register: sh_files
+  register: sh_files.results
 
 - name: Change permissions of .sh files
   ansible.builtin.file:
     path: "{{ item.path }}"
     mode: "u+x"
   loop:
-    - "{{ sh_files.files }}"
+    - "{{ sh_files.results | map(attribute='files') | flatten }}"
 
 - name: Clone a Git repository with authentication
   ansible.builtin.git:
