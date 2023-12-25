@@ -142,6 +142,18 @@
     mode: "u+x"
   loop: "{{ sh_files.results | map(attribute='files') | flatten }}"
 
+- name: Install kind
+  ansible.builtin.shell: |
+    [ `lsb_release -i | cut -f2` = "Ubuntu" ] || set -o pipefail
+    [ $(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v{{ kind_ver }}/kind-linux-amd64 && chmod +x ./kind && mv ./kind /usr/local/bin/kind
+  when: inst_kind
+  register: result
+  changed_when: result.rc == 0
+
+- name: Print variables
+  ansible.builtin.debug:
+    var: result
+
 - name: Clone a Git repository with authentication
   ansible.builtin.git:
     repo: '{{ item.from }}'
@@ -159,6 +171,27 @@
     - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/jenkins-docker.git', to: '{{ local_ws }}/jenkins-docker', version: 'dev' }
   when: git_clone
   tags: git_clone
+
+- name: Check config.yml of the k9s
+  ansible.builtin.stat:
+    path: "{{ k9s_config }}"
+  register: exist_k9s
+  tags: k9s
+
+- name: Replace {{ k9s_config }}
+  become: true
+  ansible.builtin.lineinfile:
+    path: "{{ k9s_config }}"
+    regexp: '{{ item.from }}'
+    line: '{{ item.to }}'
+    state: present
+    backup: false
+  with_items:
+    - { from: 'tail: 100', to: 'tail: 10000' }
+  when: exist_k9s.stat.exists
+  register: result
+  ignore_errors: true
+  tags: k9s
 
 - name: Make aval_password of the ansible
   become: true
