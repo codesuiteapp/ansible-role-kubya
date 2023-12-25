@@ -10,6 +10,7 @@
   loop:
     - "~/.ssh"
   register: result
+  tags: ssh
 
 - name: Touch config of the ssh
   ansible.builtin.file:
@@ -20,6 +21,7 @@
     - path: "{{ sshconfig }}"
       mode: '0600'
   ignore_errors: true
+  tags: ssh
 
 - name: Make ~/.ssh/id_rsa and ~/.ssh/id_rsa.pub
   become: true
@@ -35,10 +37,12 @@
       content: "{{ enc_id_rsa_pub }}"
   when: enc_id_rsa_key is not undefined and enc_id_rsa_pub is not undefined
   register: result
+  tags: ssh
 
 - name: Print variables
   ansible.builtin.debug:
     var: result
+  tags: ssh
 
 - name: Make ~/.kube Directory
   ansible.builtin.file:
