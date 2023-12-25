@@ -187,7 +187,7 @@
     state: present
     backup: false
   with_items:
-    - { from: 'tail: 100', to: 'tail: 10000' }
+    - { from: 'tail: 100', to: '    tail: {{ k9s_tail }}' }
   when: exist_k9s.stat.exists
   register: result
   ignore_errors: true

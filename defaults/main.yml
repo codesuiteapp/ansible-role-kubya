@@ -12,6 +12,7 @@ aval_pw_file: "{{ user_home }}/.ansible/.aval.pw"
 local_bin: "{{ user_home }}/.local/bin"
 local_ws: "{{ user_home }}/.local/workspace"
 
+k9s_tail: 10000
 use_kube: true
 
 git_clone: true
