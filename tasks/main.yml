@@ -130,14 +130,17 @@
   loop:
     - "{{ local_bin }}"
     - "{{ local_ws }}"
-  register: sh_files.results
+  register: sh_files
+
+# - name: Print variables
+#   ansible.builtin.debug:
+#     var: sh_files
 
 - name: Change permissions of .sh files
   ansible.builtin.file:
     path: "{{ item.path }}"
     mode: "u+x"
-  loop:
-    - "{{ sh_files.results | map(attribute='files') | flatten }}"
+  loop: "{{ sh_files.results | map(attribute='files') | flatten }}"
 
 - name: Clone a Git repository with authentication
   ansible.builtin.git:
