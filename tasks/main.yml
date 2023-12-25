@@ -65,6 +65,26 @@
   when: use_kube
   tags: kube
 
+- name: Check .gitconfig
+  ansible.builtin.stat:
+    path: "~/.gitconfig"
+  register: res_gitconf
+  tags: zshenv
+
+- name: Replace {{ gitconf }}
+  ansible.builtin.lineinfile:
+    path: "{{ gitconf }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+    backup: false
+  with_items:
+    - { regexp: "name.=.", line: "    name = {{ git_user }}" }
+    - { regexp: "email.=.", line: "    email = {{ git_user_email }}" }
+  when: res_gitconf.stat.exists and git_user
+  register: result
+  tags: zshenv
+
 - name: Check {{ zshenv }}
   ansible.builtin.stat:
     path: "{{ zshenv }}"
@@ -92,26 +112,6 @@
 - name: Print variables
   ansible.builtin.debug:
     var: result
-
-- name: Check .gitconfig
-  ansible.builtin.stat:
-    path: "~/.gitconfig"
-  register: res_gitconf
-  tags: zshenv
-
-- name: Replace {{ gitconf }}
-  ansible.builtin.lineinfile:
-    path: "{{ gitconf }}"
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-    state: present
-    backup: false
-  with_items:
-    - { regexp: "name.=.", line: "    name = {{ git_user }}" }
-    - { regexp: "email.=.", line: "    email = {{ git_user_email }}" }
-  when: res_gitconf.stat.exists and git_user
-  register: result
-  tags: zshenv
 
 - name: Change permissions of files and directories
   ansible.builtin.file:
@@ -159,3 +159,16 @@
     - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/jenkins-docker.git', to: '{{ local_ws }}/jenkins-docker', version: 'dev' }
   when: git_clone
   tags: git_clone
+
+- name: Make aval_password of the ansible
+  become: true
+  ansible.builtin.copy:
+    dest: "{{ aval_pw_file }}"
+    content: |
+      {{ enc_aval_pw }}
+  register: result
+  ignore_errors: true
+
+- name: Print variables
+  ansible.builtin.debug:
+    var: result
