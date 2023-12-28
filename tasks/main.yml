@@ -229,6 +229,17 @@
   ignore_errors: true
   tags: k9s
 
+- name: Mkdir Directory .ansible
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    group: root
+    owner: root
+  with_items:
+    - "~/.ansible"
+  register: result
+
 - name: Make aval_password of the ansible
   become: true
   ansible.builtin.copy:
