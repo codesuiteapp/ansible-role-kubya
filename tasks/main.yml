@@ -204,9 +204,28 @@
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/alias.sh', to: '{{ config_zsh }}' }
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/aws.sh', to: '{{ config_zsh }}' }
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/project.sh', to: '{{ config_zsh }}' }
+  when: ansible_shell_type == 'zsh'
   tags:
     - sync
     - zsh
+
+- name: Copy Zsh Config
+  ansible.builtin.copy:
+    dest: '{{ item.to }}'
+    src: '{{ item.from }}'
+    mode: '0600'
+  with_items:
+#    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.bashrc', to: '~/' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.gitconfig', to: '~/' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/.zshenv', to: '{{ config_bash }}' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/nix.zshrc', to: '{{ config_bash }}' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/alias.sh', to: '{{ config_bash }}' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/aws.sh', to: '{{ config_bash }}' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/project.sh', to: '{{ config_bash }}' }
+  when: ansible_shell_type == 'bash'
+  tags:
+    - sync
+    - bash
 
 - name: Check config.yml of the k9s
   ansible.builtin.stat:

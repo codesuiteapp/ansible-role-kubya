@@ -2,6 +2,7 @@
 user_home: "~"
 gitconf: "{{ user_home }}/.gitconfig"
 config_zsh: "{{ user_home }}/.config/zsh"
+config_bash: "{{ user_home }}/.config/bash"
 zshenv: "{{ config_zsh }}/.zshenv"
 k9s_config: "{{ user_home }}/.config/k9s/config.yml"
 kubeconfig: "{{ user_home }}/.kube/config"
