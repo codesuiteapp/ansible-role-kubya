@@ -166,7 +166,7 @@
     group: root
     owner: root
   with_items:
-    - "{{ config_zsh }}"
+    - "{{ config_zsh if ansible_user_shell == '/usr/bin/zsh' else config_bash }}"
     - "{{ user_local }}"
   register: result
 
@@ -204,12 +204,12 @@
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/alias.sh', to: '{{ config_zsh }}' }
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/aws.sh', to: '{{ config_zsh }}' }
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/project.sh', to: '{{ config_zsh }}' }
-  when: ansible_shell_type == 'zsh'
+  when: ansible_user_shell == '/usr/bin/zsh'
   tags:
     - sync
     - zsh
 
-- name: Copy Zsh Config
+- name: Copy bash Config
   ansible.builtin.copy:
     dest: '{{ item.to }}'
     src: '{{ item.from }}'
@@ -222,7 +222,7 @@
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/alias.sh', to: '{{ config_bash }}' }
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/aws.sh', to: '{{ config_bash }}' }
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/project.sh', to: '{{ config_bash }}' }
-  when: ansible_shell_type == 'bash'
+  when: ansible_user_shell == '/bin/bash'
   tags:
     - sync
     - bash
