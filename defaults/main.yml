@@ -15,6 +15,13 @@ user_local: "{{ user_home }}/.local"
 local_bin: "{{ user_local }}/bin"
 local_ws: "{{ user_local }}/workspace"
 
+kubya_packages:
+  - bat
+  - exa
+  - fd
+  - fzf
+  - zoxide
+
 k9s_tail: 10000
 use_kube: true
 

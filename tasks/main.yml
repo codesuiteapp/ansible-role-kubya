@@ -1,5 +1,23 @@
 # code: language=ansible
 ---
+- name: Update package manager
+  become: true
+  ansible.builtin.package:
+    update_cache: true
+  tags:
+    - pkg
+
+- name: Install softwares with package manager
+  become: true
+  ansible.builtin.package:
+    name:
+      "{{ kubya_packages }}"
+  register: result
+  when: ansible_pkg_mgr != "pacman"
+  ignore_errors: true
+  tags:
+    - pkg
+
 - name: Make ~/.ssh Directory
   ansible.builtin.file:
     path: "{{ item }}"
@@ -260,6 +278,17 @@
   register: result
   ignore_errors: true
   tags: k9s
+
+- name: Symbolic link for debian
+  ansible.builtin.file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+  with_items:
+    - { src: "/usr/bin/batcat", dest: "/usr/bin/bat" }
+    - { src: "/usr/bin/fdfind", dest: "/usr/bin/fd" }
+  when: ansible_facts['os_family'] == "Debian"
+  register: result
 
 - name: Make .ansible directory
   ansible.builtin.file:
