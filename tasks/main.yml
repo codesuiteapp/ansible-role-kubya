@@ -111,7 +111,7 @@
   with_items:
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.gitconfig', to: '~/' }
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/.zshenv', to: '{{ config_zsh if ansible_user_shell == "/usr/bin/zsh" else config_bash }}' }
-    # - { from: '{{ local_ws }}/kubya/ansible/files/HOME/{{ ".zshrc" if ansible_user_shell == "/usr/bin/zsh" else ".bashrc" }}', to: '~/' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/{{ ".zshrc" if ansible_user_shell == "/usr/bin/zsh" else ".bashrc" }}', to: '{{ config_zsh if ansible_user_shell == "/usr/bin/zsh" else config_bash }}' }
   tags:
     - sync
 
