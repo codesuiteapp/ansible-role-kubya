@@ -155,7 +155,7 @@
   with_items:
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.bashrc', to: '{{ config_bash }}' }
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/bash/.bashenv', to: '{{ config_bash }}' }
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/bash/.bashalias.sh', to: '{{ config_bash }}' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/bash/bashalias.sh', to: '{{ config_bash }}' }
   when: ansible_user_shell != "/usr/bin/zsh"
   tags:
     - sync
