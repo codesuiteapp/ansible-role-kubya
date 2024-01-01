@@ -18,8 +18,9 @@ local_ws: "{{ user_local }}/workspace"
 kubya_packages:
   - bat
   - exa
-  - fd
+  - fd-find
   - fzf
+  - ripgrep
   - zoxide
 
 k9s_tail: 10000
