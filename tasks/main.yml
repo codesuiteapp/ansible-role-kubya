@@ -206,7 +206,7 @@
 - name: Copy user configs
   ansible.builtin.copy:
     dest: '{{ config_zsh if ansible_user_shell == "/bin/bash" else config_bash }}'
-    src: '{{ item.from }}'
+    src: '{{ item }}'
     mode: '0644'
   with_fileglob:
     - '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/*'
@@ -216,7 +216,7 @@
 - name: Copy localbin
   ansible.builtin.copy:
     dest: '{{ local_bin }}'
-    src: '{{ item.from }}'
+    src: '{{ item }}'
     mode: '0644'
   with_fileglob:
     - '{{ local_ws }}/kubya/ansible/files/HOME/.local/bin/*'
