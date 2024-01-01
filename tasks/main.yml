@@ -191,17 +191,35 @@
     - git_clone
     - sync
 
-- name: Copy user configs
+- name: Copy user scripts
   ansible.builtin.copy:
     dest: '{{ item.to }}'
     src: '{{ item.from }}'
     mode: '0644'
-  with_fileglob:
+  with_items:
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.gitconfig', to: '~/' }
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.local/bin/*', to: '{{ local_bin }}' }
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/{{ ".zshrc" if ansible_user_shell == "/bin/bash" else ".bashrc" }}', to: '~/' }
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/.zshenv', to: '{{ config_zsh }}' }
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/*', to: '{{ config_zsh if ansible_user_shell == "/bin/bash" else config_bash }}' }
+  tags:
+    - sync
+
+- name: Copy user configs
+  ansible.builtin.copy:
+    dest: '{{ config_zsh if ansible_user_shell == "/bin/bash" else config_bash }}'
+    src: '{{ item.from }}'
+    mode: '0644'
+  with_fileglob:
+    - '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/*'
+  tags:
+    - sync
+
+- name: Copy localbin
+  ansible.builtin.copy:
+    dest: '{{ local_bin }}'
+    src: '{{ item.from }}'
+    mode: '0644'
+  with_fileglob:
+    - '{{ local_ws }}/kubya/ansible/files/HOME/.local/bin/*'
   tags:
     - sync
 
