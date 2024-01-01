@@ -205,7 +205,7 @@
 
 - name: Copy user configs
   ansible.builtin.copy:
-    dest: '{{ config_zsh if ansible_user_shell == "/bin/bash" else config_bash }}'
+    dest: '{{ config_zsh if ansible_user_shell == "/bin/bash" else config_bash }}/'
     src: '{{ item }}'
     mode: '0644'
   with_fileglob:
@@ -215,7 +215,7 @@
 
 - name: Copy localbin
   ansible.builtin.copy:
-    dest: '{{ local_bin }}'
+    dest: '{{ local_bin }}/'
     src: '{{ item }}'
     mode: '0644'
   with_fileglob:
