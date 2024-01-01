@@ -69,6 +69,27 @@
   when: use_kube
   tags: kube
 
+- name: Clone a Git repository with authentication
+  ansible.builtin.git:
+    repo: '{{ item.from }}'
+    dest: "{{ item.to }}"
+    clone: true
+    depth: 1
+    recursive: true
+    version: '{{ item.version }}'
+    accept_hostkey: true
+    force: true
+    update: true
+  with_items:
+    - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/user_nvim.git', to: '~/.config/nvim/lua/user', version: 'main' }
+    - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/kubya.git', to: '{{ local_ws }}/kubya', version: 'dev' }
+    - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/kubya-playbooks.git', to: '{{ local_ws }}/playbooks', version: 'dev' }
+    - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/jenkins-docker.git', to: '{{ local_ws }}/jenkins-docker', version: 'dev' }
+  when: git_clone
+  tags:
+    - git_clone
+    - sync
+
 - name: Check .gitconfig
   ansible.builtin.stat:
     path: "~/.gitconfig"
@@ -217,27 +238,6 @@
     path: "{{ item.path }}"
     mode: "u+x"
   loop: "{{ sh_files.results | map(attribute='files') | flatten }}"
-
-- name: Clone a Git repository with authentication
-  ansible.builtin.git:
-    repo: '{{ item.from }}'
-    dest: "{{ item.to }}"
-    clone: true
-    depth: 1
-    recursive: true
-    version: '{{ item.version }}'
-    accept_hostkey: true
-    force: true
-    update: true
-  with_items:
-    - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/user_nvim.git', to: '~/.config/nvim/lua/user', version: 'main' }
-    - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/kubya.git', to: '{{ local_ws }}/kubya', version: 'dev' }
-    - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/kubya-playbooks.git', to: '{{ local_ws }}/playbooks', version: 'dev' }
-    - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/jenkins-docker.git', to: '{{ local_ws }}/jenkins-docker', version: 'dev' }
-  when: git_clone
-  tags:
-    - git_clone
-    - sync
 
 - name: Check config.yml of the k9s
   ansible.builtin.stat:
