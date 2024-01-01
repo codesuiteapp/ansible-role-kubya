@@ -89,6 +89,52 @@
   register: result
   tags: zshenv
 
+- name: Mkdir Directory [config_zsh, user_local]
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    group: root
+    owner: root
+  with_items:
+    - "{{ config_zsh if ansible_user_shell == '/usr/bin/zsh' else config_bash }}"
+    - "{{ user_local }}"
+    - "{{ local_bin }}"
+    - "{{ local_ws }}"
+  register: result
+
+- name: Copy user scripts
+  ansible.builtin.copy:
+    src: '{{ item.from }}'
+    dest: '{{ item.to }}'
+    mode: '0644'
+  with_items:
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.gitconfig', to: '~/' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/{{ ".zshrc" if ansible_user_shell == "/bin/bash" else ".bashrc" }}', to: '~/' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/.zshenv', to: '{{ config_zsh }}' }
+  tags:
+    - sync
+
+- name: Copy user configs
+  ansible.builtin.copy:
+    src: '{{ item }}'
+    dest: '{{ config_zsh if ansible_user_shell == "/bin/bash" else config_bash }}/'
+    mode: '0644'
+  with_fileglob:
+    - '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/*'
+  tags:
+    - sync
+
+- name: Copy localbin
+  ansible.builtin.copy:
+    src: '{{ item }}'
+    dest: '{{ local_bin }}/'
+    mode: '0644'
+  with_fileglob:
+    - '{{ local_ws }}/kubya/ansible/files/HOME/.local/bin/*'
+  tags:
+    - sync
+
 - name: Check {{ zshenv }}
   ansible.builtin.stat:
     path: "{{ zshenv }}"
@@ -146,30 +192,6 @@
     mode: "u+x"
   loop: "{{ sh_files.results | map(attribute='files') | flatten }}"
 
-# - name: Install kind
-#   ansible.builtin.shell: |
-#     [ `lsb_release -i | cut -f2` = "Ubuntu" ] || set -o pipefail
-#     [ $(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v{{ kind_ver }}/kind-linux-amd64 && chmod +x ./kind && mv ./kind /usr/local/bin/kind
-#   when: inst_kind
-#   register: result
-#   changed_when: result.rc == 0
-
-# - name: Print variables
-#   ansible.builtin.debug:
-#     var: result
-
-- name: Mkdir Directory [config_zsh, user_local]
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: directory
-    mode: '0755'
-    group: root
-    owner: root
-  with_items:
-    - "{{ config_zsh if ansible_user_shell == '/usr/bin/zsh' else config_bash }}"
-    - "{{ user_local }}"
-  register: result
-
 - name: Clone a Git repository with authentication
   ansible.builtin.git:
     repo: '{{ item.from }}'
@@ -189,38 +211,6 @@
   when: git_clone
   tags:
     - git_clone
-    - sync
-
-- name: Copy user scripts
-  ansible.builtin.copy:
-    dest: '{{ item.to }}'
-    src: '{{ item.from }}'
-    mode: '0644'
-  with_items:
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.gitconfig', to: '~/' }
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/{{ ".zshrc" if ansible_user_shell == "/bin/bash" else ".bashrc" }}', to: '~/' }
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/.zshenv', to: '{{ config_zsh }}' }
-  tags:
-    - sync
-
-- name: Copy user configs
-  ansible.builtin.copy:
-    dest: '{{ config_zsh if ansible_user_shell == "/bin/bash" else config_bash }}/'
-    src: '{{ item }}'
-    mode: '0644'
-  with_fileglob:
-    - '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/*'
-  tags:
-    - sync
-
-- name: Copy localbin
-  ansible.builtin.copy:
-    dest: '{{ local_bin }}/'
-    src: '{{ item }}'
-    mode: '0644'
-  with_fileglob:
-    - '{{ local_ws }}/kubya/ansible/files/HOME/.local/bin/*'
-  tags:
     - sync
 
 - name: Check config.yml of the k9s
