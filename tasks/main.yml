@@ -89,7 +89,7 @@
   register: result
   tags: zshenv
 
-- name: Mkdir Directory [config_zsh, user_local]
+- name: Make Directory [user_local, user_bin and etc]
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -110,15 +110,15 @@
     mode: '0644'
   with_items:
     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.gitconfig', to: '~/' }
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/{{ ".zshrc" if ansible_user_shell == "/bin/bash" else ".bashrc" }}', to: '~/' }
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/.zshenv', to: '{{ config_zsh }}' }
+    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/.zshenv', to: '{{ config_zsh if ansible_user_shell == "/usr/bin/zsh" else config_bash }}' }
+    # - { from: '{{ local_ws }}/kubya/ansible/files/HOME/{{ ".zshrc" if ansible_user_shell == "/usr/bin/zsh" else ".bashrc" }}', to: '~/' }
   tags:
     - sync
 
 - name: Copy user configs
   ansible.builtin.copy:
     src: '{{ item }}'
-    dest: '{{ config_zsh if ansible_user_shell == "/bin/bash" else config_bash }}/'
+    dest: '{{ config_zsh if ansible_user_shell == "/usr/bin/zsh" else config_bash }}/'
     mode: '0644'
   with_fileglob:
     - '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/*'
