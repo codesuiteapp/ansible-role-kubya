@@ -240,7 +240,6 @@
 #     mode: "u+x"
 #   loop: "{{ sh_files.results | map(attribute='files') | flatten }}"
 
-
 - name: Chezmoi Apply on ArchLinux
   become: true
   ansible.builtin.shell: |
@@ -252,7 +251,7 @@
   become: true
   ansible.builtin.shell: |
     sh -c "$(curl -fsLS get.chezmoi.io)"
-  ags:
+  args:
     chdir: "/root"
   register: result
   when: ansible_pkg_mgr != "pacman"
