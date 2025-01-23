@@ -10,6 +10,7 @@ sshconfig: "{{ user_home }}/.ssh/config"
 ssh_key: "{{ user_home }}/.ssh/id_rsa"
 ssh_pub: "{{ user_home }}/.ssh/id_rsa.pub"
 aval_pw_file: "{{ user_home }}/.ansible/.aval.pw"
+github_username: "codesuiteapp"
 
 user_local: "{{ user_home }}/.local"
 local_bin: "{{ user_local }}/bin"

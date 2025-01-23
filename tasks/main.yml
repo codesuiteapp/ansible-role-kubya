@@ -99,7 +99,6 @@
     force: true
     update: true
   with_items:
-    - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/user_nvim.git', to: '~/.config/nvim/lua/user', version: 'main' }
     - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/kubya.git', to: '{{ local_ws }}/kubya', version: 'dev' }
     - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/kubya-playbooks.git', to: '{{ local_ws }}/playbooks', version: 'dev' }
     - { from: 'https://{{ enc_gh_user }}:{{ enc_gh_token }}@github.com/{{ enc_gh_user }}/jenkins-docker.git', to: '{{ local_ws }}/jenkins-docker', version: 'dev' }
@@ -141,16 +140,6 @@
     - "{{ local_bin }}"
     - "{{ local_ws }}"
   register: result
-
-- name: Copy gitconfig
-  ansible.builtin.copy:
-    src: '{{ item.from }}'
-    dest: '{{ item.to }}'
-    mode: '0644'
-  with_items:
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.gitconfig', to: '~/' }
-  tags:
-    - sync
 
 - name: Copy user scripts for zsh
   ansible.builtin.copy:
@@ -251,6 +240,24 @@
 # - name: Print variables
 #   ansible.builtin.debug:
 #     var: sh_files
+
+- name: Chezmoi Apply on ArchLinux
+  become: true
+  ansible.builtin.shell: |
+    chezmoi init --apply {{ github_username }}
+  register: result
+  when: ansible_pkg_mgr == "pacman"
+
+- name: Chezmoi Apply on Linux
+  become: true
+  ansible.builtin.shell: |
+    sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply {{ github_username }}
+  register: result
+  when: ansible_pkg_mgr != "pacman"
+
+- name: Print variables
+  ansible.builtin.debug:
+    var: result
 
 - name: Change permissions of .sh files
   ansible.builtin.file:
