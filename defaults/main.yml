@@ -19,7 +19,7 @@ local_ws: "{{ user_local }}/workspace"
 kubya_packages:
   - bat
   - delta
-  - exa
+  - eza
   - fd-find
   - fzf
   - ripgrep

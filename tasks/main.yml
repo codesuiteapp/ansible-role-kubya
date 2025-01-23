@@ -107,25 +107,25 @@
     - git_clone
     - sync
 
-- name: Check .gitconfig
-  ansible.builtin.stat:
-    path: "~/.gitconfig"
-  register: res_gitconf
-  tags: zshenv
+# - name: Check .gitconfig
+#   ansible.builtin.stat:
+#     path: "~/.gitconfig"
+#   register: res_gitconf
+#   tags: zshenv
 
-- name: Replace {{ gitconf }}
-  ansible.builtin.lineinfile:
-    path: "{{ gitconf }}"
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-    state: present
-    backup: false
-  with_items:
-    - { regexp: "name.=.", line: "    name = {{ git_user }}" }
-    - { regexp: "email.=.", line: "    email = {{ git_user_email }}" }
-  when: res_gitconf.stat.exists and git_user
-  register: result
-  tags: zshenv
+# - name: Replace {{ gitconf }}
+#   ansible.builtin.lineinfile:
+#     path: "{{ gitconf }}"
+#     regexp: "{{ item.regexp }}"
+#     line: "{{ item.line }}"
+#     state: present
+#     backup: false
+#   with_items:
+#     - { regexp: "name.=.", line: "    name = {{ git_user }}" }
+#     - { regexp: "email.=.", line: "    email = {{ git_user_email }}" }
+#   when: res_gitconf.stat.exists and git_user
+#   register: result
+#   tags: zshenv
 
 - name: Make Directory [user_local, user_bin and etc]
   ansible.builtin.file:
@@ -141,105 +141,105 @@
     - "{{ local_ws }}"
   register: result
 
-- name: Copy user scripts for zsh
-  ansible.builtin.copy:
-    src: '{{ item.from }}'
-    dest: '{{ item.to }}'
-    mode: '0644'
-  with_items:
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.zshrc', to: '{{ config_zsh }}' }
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/.zshenv', to: '{{ config_zsh }}' }
-  when: ansible_user_shell == "/usr/bin/zsh"
-  tags:
-    - sync
-    - zsh
+# - name: Copy user scripts for zsh
+#   ansible.builtin.copy:
+#     src: '{{ item.from }}'
+#     dest: '{{ item.to }}'
+#     mode: '0644'
+#   with_items:
+#     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.zshrc', to: '{{ config_zsh }}' }
+#     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/.zshenv', to: '{{ config_zsh }}' }
+#   when: ansible_user_shell == "/usr/bin/zsh"
+#   tags:
+#     - sync
+#     - zsh
 
-- name: Copy user scripts for bash
-  ansible.builtin.copy:
-    src: '{{ item.from }}'
-    dest: '{{ item.to }}'
-    mode: '0644'
-  with_items:
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.bashrc', to: '{{ config_bash }}' }
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/bash/.bashenv', to: '{{ config_bash }}' }
-    - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/bash/bashalias.sh', to: '{{ config_bash }}' }
-  when: ansible_user_shell != "/usr/bin/zsh"
-  tags:
-    - sync
-    - bash
+# - name: Copy user scripts for bash
+#   ansible.builtin.copy:
+#     src: '{{ item.from }}'
+#     dest: '{{ item.to }}'
+#     mode: '0644'
+#   with_items:
+#     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.bashrc', to: '{{ config_bash }}' }
+#     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/bash/.bashenv', to: '{{ config_bash }}' }
+#     - { from: '{{ local_ws }}/kubya/ansible/files/HOME/.config/bash/bashalias.sh', to: '{{ config_bash }}' }
+#   when: ansible_user_shell != "/usr/bin/zsh"
+#   tags:
+#     - sync
+#     - bash
 
-- name: Copy user configs
-  ansible.builtin.copy:
-    src: '{{ item }}'
-    dest: '{{ config_zsh if ansible_user_shell == "/usr/bin/zsh" else config_bash }}/'
-    mode: '0644'
-  with_fileglob:
-    - '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/*'
-  tags:
-    - sync
-    - bash
-    - zsh
+# - name: Copy user configs
+#   ansible.builtin.copy:
+#     src: '{{ item }}'
+#     dest: '{{ config_zsh if ansible_user_shell == "/usr/bin/zsh" else config_bash }}/'
+#     mode: '0644'
+#   with_fileglob:
+#     - '{{ local_ws }}/kubya/ansible/files/HOME/.config/zsh/*'
+#   tags:
+#     - sync
+#     - bash
+#     - zsh
 
-- name: Copy localbin
-  ansible.builtin.copy:
-    src: '{{ item }}'
-    dest: '{{ local_bin }}/'
-    mode: '0644'
-  with_fileglob:
-    - '{{ local_ws }}/kubya/ansible/files/HOME/.local/bin/*'
-  tags:
-    - sync
+# - name: Copy localbin
+#   ansible.builtin.copy:
+#     src: '{{ item }}'
+#     dest: '{{ local_bin }}/'
+#     mode: '0644'
+#   with_fileglob:
+#     - '{{ local_ws }}/kubya/ansible/files/HOME/.local/bin/*'
+#   tags:
+#     - sync
 
-- name: Check {{ zshenv }}
-  ansible.builtin.stat:
-    path: "{{ zshenv }}"
-  register: exist_zshenv
+# - name: Check {{ zshenv }}
+#   ansible.builtin.stat:
+#     path: "{{ zshenv }}"
+#   register: exist_zshenv
 
-- name: Replace {{ zshenv }}
-  become: true
-  ansible.builtin.lineinfile:
-    path: "{{ zshenv }}"
-    regexp: '{{ item.from }}'
-    line: '{{ item.to }}'
-    state: present
-    backup: false
-  with_items:
-    - { from: 'export GHCR_USERNAME', to: 'export GHCR_USERNAME="{{ dkr_username }}"' }
-    - { from: '^(#.)?export CR_PAT', to: 'export CR_PAT="{{ dkr_passwd }}"' }
-    - { from: '^(#.)?export SSHPW', to: 'export SSHPW="{{ ansible_ssh_pass }}"' }
-    # - { from: 'export DKR_USERNAME', to: 'export DKR_USERNAME="{{ dkr_username }}"' }
-    # - { from: '^(#.)?export DKR_PASSWD', to: 'export DKR_PASSWD="{{ dkr_passwd }}"' }
-  when: exist_zshenv.stat.exists
-  register: result
-  ignore_errors: true
-  tags: zshenv
+# - name: Replace {{ zshenv }}
+#   become: true
+#   ansible.builtin.lineinfile:
+#     path: "{{ zshenv }}"
+#     regexp: '{{ item.from }}'
+#     line: '{{ item.to }}'
+#     state: present
+#     backup: false
+#   with_items:
+#     - { from: 'export GHCR_USERNAME', to: 'export GHCR_USERNAME="{{ dkr_username }}"' }
+#     - { from: '^(#.)?export CR_PAT', to: 'export CR_PAT="{{ dkr_passwd }}"' }
+#     - { from: '^(#.)?export SSHPW', to: 'export SSHPW="{{ ansible_ssh_pass }}"' }
+#     # - { from: 'export DKR_USERNAME', to: 'export DKR_USERNAME="{{ dkr_username }}"' }
+#     # - { from: '^(#.)?export DKR_PASSWD', to: 'export DKR_PASSWD="{{ dkr_passwd }}"' }
+#   when: exist_zshenv.stat.exists
+#   register: result
+#   ignore_errors: true
+#   tags: zshenv
 
-- name: Print variables
-  ansible.builtin.debug:
-    var: result
+# - name: Print variables
+#   ansible.builtin.debug:
+#     var: result
 
-- name: Change permissions of files and directories
-  ansible.builtin.file:
-    path: "{{ local_ws }}"
-    mode: "0755"
-    recurse: true
-    state: directory
-
-- name: Find all .sh files in workspace directory
-  ansible.builtin.find:
-    paths: "{{ item }}"
-    patterns: "*.sh"
-    hidden: true
-    recurse: true
-    use_regex: false
-  loop:
-    - "{{ local_bin }}"
-    - "{{ local_ws }}"
-  register: sh_files
+# - name: Find all .sh files in workspace directory
+#   ansible.builtin.find:
+#     paths: "{{ item }}"
+#     patterns: "*.sh"
+#     hidden: true
+#     recurse: true
+#     use_regex: false
+#   loop:
+#     - "{{ local_bin }}"
+#     - "{{ local_ws }}"
+#   register: sh_files
 
 # - name: Print variables
 #   ansible.builtin.debug:
 #     var: sh_files
+
+# - name: Change permissions of .sh files
+#   ansible.builtin.file:
+#     path: "{{ item.path }}"
+#     mode: "u+x"
+#   loop: "{{ sh_files.results | map(attribute='files') | flatten }}"
+
 
 - name: Chezmoi Apply on ArchLinux
   become: true
@@ -251,7 +251,9 @@
 - name: Chezmoi Apply on Linux
   become: true
   ansible.builtin.shell: |
-    sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply {{ github_username }}
+    sh -c "$(curl -fsLS get.chezmoi.io)"
+  ags:
+    chdir: "/root"
   register: result
   when: ansible_pkg_mgr != "pacman"
 
@@ -259,11 +261,12 @@
   ansible.builtin.debug:
     var: result
 
-- name: Change permissions of .sh files
+- name: Change permissions of files and directories
   ansible.builtin.file:
-    path: "{{ item.path }}"
-    mode: "u+x"
-  loop: "{{ sh_files.results | map(attribute='files') | flatten }}"
+    path: "{{ local_ws }}"
+    mode: "0755"
+    recurse: true
+    state: directory
 
 - name: Check config.yml of the k9s
   ansible.builtin.stat:
